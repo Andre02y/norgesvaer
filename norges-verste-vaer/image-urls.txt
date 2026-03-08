@@ -1,0 +1,3 @@
+hero-storm: https://d2xsxph8kpxj0f.cloudfront.net/310519663397553509/5iRSSyapKXacEfRoQ8UKk7/hero-storm-6SLKFd38cHXnh2KaC3MWaz.webp
+tronskifte-bg: https://d2xsxph8kpxj0f.cloudfront.net/310519663397553509/5iRSSyapKXacEfRoQ8UKk7/tronskifte-bg-XhXTSnWy2AuXXbLzhzFrNx.webp
+finnmark-storm: https://d2xsxph8kpxj0f.cloudfront.net/310519663397553509/5iRSSyapKXacEfRoQ8UKk7/finnmark-storm-4dKCpVi68qmvqJXSr8XqTP.webp
