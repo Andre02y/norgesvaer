@@ -213,7 +213,7 @@ def fetch_daily_observations(date_str, stations):
         data = frost_get(FROST_BASE_URL, {
             "sources": sources_str,
             "referencetime": f"{date_str}/{date_str}",
-            "elements": "sum(precipitation_amount P1D),mean(wind_speed P1D),max(wind_speed_of_gust P1D),mean(air_temperature P1D)",
+"elements": "sum(precipitation_amount P1D),mean(wind_speed P1D),max(wind_speed_of_gust PT1H),mean(air_temperature P1D)"
             "timeoffsets": "PT0H",
             "fields": "sourceId,elementId,value,referenceTime"
         })
@@ -252,7 +252,7 @@ def fetch_daily_observations(date_str, stations):
     result = {}
     for sid, obs in all_obs.items():
         wind_mean = obs.get("mean(wind_speed P1D)", obs.get("wind_mean", 0))
-        gust_max = obs.get("max(wind_speed_of_gust P1D)", obs.get("gust_max", 0))
+gust_max = obs.get("max(wind_speed_of_gust PT1H)", obs.get("gust_max", 0))
         precip = obs.get("sum(precipitation_amount P1D)", obs.get("precip", 0))
         temp_mean = obs.get("mean(air_temperature P1D)", obs.get("temp_mean", None))
 
