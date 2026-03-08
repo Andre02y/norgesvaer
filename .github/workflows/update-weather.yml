@@ -1,0 +1,17 @@
+name: Update Weather Data
+
+on:
+  schedule:
+    - cron: "46 13 * * *"
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Test workflow
+        run: echo "Weather robot running"
