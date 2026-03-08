@@ -2,7 +2,7 @@ name: Update Weather Data
 
 on:
   schedule:
-    cron: "*/30 * * * *"
+    - cron: "*/30 * * * *"
   workflow_dispatch:
 
 jobs:
@@ -13,5 +13,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Test workflow
-        run: echo "Weather robot running"
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run Frost data script
+        env:
+          FROST_CLIENT_ID: ${{ secrets.FROST_CLIENT_ID }}
+        run: python norges-verste-vaer/scripts/fetch_frost_data.py
+
+      - name: Commit updated data
+        run: |
+          git config --global user.name "weather-bot"
+          git config --global user.email "bot@github.com"
+          git add .
+          git commit -m "Auto update weather data" || echo "No changes"
+          git push
