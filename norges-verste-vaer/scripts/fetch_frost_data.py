@@ -210,13 +210,13 @@ def fetch_daily_observations(date_str, stations):
         batch = station_ids[i:i + batch_size]
         sources_str = ",".join(batch)
 
-        data = frost_get(FROST_BASE_URL, {
-            "sources": sources_str,
-            "referencetime": f"{date_str}/{date_str}",
-"elements": "sum(precipitation_amount P1D),mean(wind_speed P1D),max(wind_speed_of_gust PT1H),mean(air_temperature P1D)"
-            "timeoffsets": "PT0H",
-            "fields": "sourceId,elementId,value,referenceTime"
-        })
+      data = frost_get(FROST_BASE_URL, {
+    "sources": sources_str,
+    "referencetime": f"{date_str}/{date_str}",
+    "elements": "sum(precipitation_amount P1D),mean(wind_speed P1D),max(wind_speed_of_gust PT1H),mean(air_temperature P1D)",
+    "timeoffsets": "PT0H",
+    "fields": "sourceId,elementId,value,referenceTime"
+})
 
         if data and "data" in data:
             for obs in data["data"]:
