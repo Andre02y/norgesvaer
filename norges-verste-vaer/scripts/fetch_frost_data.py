@@ -248,26 +248,26 @@ for i in range(0, len(station_ids), batch_size):
         log.info(f"Only {stations_with_wind} stations with wind P1D — trying hourly fallback...")
         all_obs = fetch_hourly_fallback(date_str, station_ids, all_obs)
 
-    # Normalize to standard keys
-    result = {}
-    for sid, obs in all_obs.items():
-        wind_mean = obs.get("mean(wind_speed P1D)", obs.get("wind_mean", 0))
-gust_max = obs.get("max(wind_speed_of_gust PT1H)", obs.get("gust_max", 0))
-        precip = obs.get("sum(precipitation_amount P1D)", obs.get("precip", 0))
-        temp_mean = obs.get("mean(air_temperature P1D)", obs.get("temp_mean", None))
+# Normalize to standard keys
+result = {}
+for sid, obs in all_obs.items():
+    wind_mean = obs.get("mean(wind_speed P1D)", obs.get("wind_mean", 0))
+    gust_max = obs.get("max(wind_speed_of_gust PT1H)", obs.get("gust_max", 0))
+    precip = obs.get("sum(precipitation_amount P1D)", obs.get("precip", 0))
+    temp_mean = obs.get("mean(air_temperature P1D)", obs.get("temp_mean", None))
 
-        if temp_mean is None:
-            continue  # Need at least temperature
+    if temp_mean is None:
+        continue  # Need at least temperature
 
-        result[sid] = {
-            "wind_mean": max(0, wind_mean),
-            "gust_max": max(0, gust_max),
-            "precip": max(0, precip),
-            "temp_mean": temp_mean
-        }
+    result[sid] = {
+        "wind_mean": max(0, wind_mean),
+        "gust_max": max(0, gust_max),
+        "precip": max(0, precip),
+        "temp_mean": temp_mean
+    }
 
-    log.info(f"Final: {len(result)} stations with usable data")
-    return result
+log.info(f"Final: {len(result)} stations with usable data")
+return result
 
 
 def fetch_hourly_fallback(date_str, station_ids, existing_obs):
