@@ -52,14 +52,14 @@ KOMMUNE_TO_FYLKE = {
     "32": "Akershus",
     "33": "Buskerud",
     "34": "Innlandet",
-    "38": "Vestfold",  # Vestfold og Telemark split
+    "38": "Vestfold",
     "39": "Telemark",
     "40": "Telemark",  # fallback
     "42": "Agder",
     "46": "Vestland",
     "50": "Trøndelag",
     "54": "Troms",
-    "55": "Troms",  # Romsa
+    "55": "Troms",
     "56": "Finnmark",
 }
 
@@ -140,19 +140,21 @@ def frost_get(url, params, max_retries=3):
             )
             if resp.status_code == 200:
                 return resp.json()
-            elif resp.status_code == 404:
+            if resp.status_code == 404:
                 log.warning(f"No data found (404): {params}")
                 return None
-            elif resp.status_code == 412:
+            if resp.status_code == 412:
                 log.warning(f"No data matching criteria (412): {params}")
                 return None
-            else:
-                log.warning(f"Attempt {attempt+1}: HTTP {resp.status_code} — {resp.text[:200]}")
+
+            log.warning(f"Attempt {attempt + 1}: HTTP {resp.status_code} — {resp.text[:200]}")
         except requests.exceptions.RequestException as e:
-            log.warning(f"Attempt {attempt+1}: Request failed — {e}")
+            log.warning(f"Attempt {attempt + 1}: Request failed — {e}")
+
         if attempt < max_retries - 1:
             import time
             time.sleep(5 * (attempt + 1))
+
     log.error(f"Failed after {max_retries} attempts")
     return None
 
@@ -165,6 +167,7 @@ def get_station_metadata():
         "country": "NO",
         "fields": "id,name,municipality,municipalityId"
     })
+
     if not data or "data" not in data:
         log.error("Failed to fetch station metadata")
         return {}
@@ -204,34 +207,37 @@ def fetch_daily_observations(date_str, stations):
     station_ids = list(stations.keys())
     all_obs = {}
 
-  # Batch stations (max 50 per request to avoid URI too long)
-batch_size = 50
-for i in range(0, len(station_ids), batch_size):
-    batch = station_ids[i:i + batch_size]
-    sources_str = ",".join(batch)
+    # Batch stations (max 50 per request to avoid URI too long)
+    batch_size = 50
+    for i in range(0, len(station_ids), batch_size):
+        batch = station_ids[i:i + batch_size]
+        sources_str = ",".join(batch)
 
-    data = frost_get(FROST_BASE_URL, {
-        "sources": sources_str,
-        "referencetime": f"{date_str}/{date_str}",
-        "elements": "sum(precipitation_amount P1D),mean(wind_speed P1D),max(wind_speed_of_gust PT1H),mean(air_temperature P1D)",
-        "timeoffsets": "PT0H",
-        "fields": "sourceId,elementId,value,referenceTime"
-    })
+        data = frost_get(FROST_BASE_URL, {
+            "sources": sources_str,
+            "referencetime": f"{date_str}/{date_str}",
+            "elements": "sum(precipitation_amount P1D),mean(wind_speed P1D),max(wind_speed_of_gust PT1H),mean(air_temperature P1D)",
+            "timeoffsets": "PT0H"
+        })
 
-    if data and "data" in data:
-        for obs in data["data"]:
-            sid = obs.get("sourceId", "").split(":")[0]
-            ref_time = obs.get("referenceTime", "")[:10]
-            if ref_time != date_str:
-                continue
-            for o in obs.get("observations", []):
-                eid = o.get("elementId", "")
-                val = o.get("value")
-                if val is None:
+        if data and "data" in data:
+            for obs in data["data"]:
+                sid = obs.get("sourceId", "").split(":")[0]
+                ref_time = obs.get("referenceTime", "")[:10]
+
+                if ref_time != date_str:
                     continue
-                    if sid not in all_obs:
-                        all_obs[sid] = {}
-                    # Deduplicate: keep first value per element per station
+
+                if sid not in all_obs:
+                    all_obs[sid] = {}
+
+                for o in obs.get("observations", []):
+                    eid = o.get("elementId", "")
+                    val = o.get("value")
+
+                    if val is None:
+                        continue
+
                     if eid not in all_obs[sid]:
                         all_obs[sid][eid] = float(val)
 
@@ -240,34 +246,34 @@ for i in range(0, len(station_ids), batch_size):
 
     log.info(f"P1D: Got data for {len(all_obs)} stations")
 
-    # Check if we have enough data; if not, try hourly fallback
     stations_with_wind = sum(1 for s in all_obs.values() if "mean(wind_speed P1D)" in s)
     stations_with_precip = sum(1 for s in all_obs.values() if "sum(precipitation_amount P1D)" in s)
+    log.info(f"P1D coverage: wind={stations_with_wind}, precip={stations_with_precip}")
 
     if stations_with_wind < 100:
         log.info(f"Only {stations_with_wind} stations with wind P1D — trying hourly fallback...")
         all_obs = fetch_hourly_fallback(date_str, station_ids, all_obs)
 
-# Normalize to standard keys
-result = {}
-for sid, obs in all_obs.items():
-    wind_mean = obs.get("mean(wind_speed P1D)", obs.get("wind_mean", 0))
-    gust_max = obs.get("max(wind_speed_of_gust PT1H)", obs.get("gust_max", 0))
-    precip = obs.get("sum(precipitation_amount P1D)", obs.get("precip", 0))
-    temp_mean = obs.get("mean(air_temperature P1D)", obs.get("temp_mean", None))
+    # Normalize to standard keys
+    result = {}
+    for sid, obs in all_obs.items():
+        wind_mean = obs.get("mean(wind_speed P1D)", obs.get("wind_mean", 0))
+        gust_max = obs.get("max(wind_speed_of_gust PT1H)", obs.get("gust_max", 0))
+        precip = obs.get("sum(precipitation_amount P1D)", obs.get("precip", 0))
+        temp_mean = obs.get("mean(air_temperature P1D)", obs.get("temp_mean", None))
 
-    if temp_mean is None:
-        continue  # Need at least temperature
+        if temp_mean is None:
+            continue
 
-    result[sid] = {
-        "wind_mean": max(0, wind_mean),
-        "gust_max": max(0, gust_max),
-        "precip": max(0, precip),
-        "temp_mean": temp_mean
-    }
+        result[sid] = {
+            "wind_mean": max(0, wind_mean),
+            "gust_max": max(0, gust_max),
+            "precip": max(0, precip),
+            "temp_mean": temp_mean
+        }
 
-log.info(f"Final: {len(result)} stations with usable data")
-return result
+    log.info(f"Final: {len(result)} stations with usable data")
+    return result
 
 
 def fetch_hourly_fallback(date_str, station_ids, existing_obs):
@@ -284,47 +290,57 @@ def fetch_hourly_fallback(date_str, station_ids, existing_obs):
         data = frost_get(FROST_BASE_URL, {
             "sources": sources_str,
             "referencetime": f"{date_str}T00:00:00/{next_day}T00:00:00",
-            "elements": "wind_speed,max(wind_speed_of_gust PT1H),air_temperature,sum(precipitation_amount PT1H)",
-            "fields": "sourceId,elementId,value,referenceTime"
+            "elements": "wind_speed,max(wind_speed_of_gust PT1H),air_temperature,sum(precipitation_amount PT1H)"
         })
 
-        if data and "data" in data:
-            hourly = defaultdict(lambda: {"winds": [], "gusts": [], "temps": [], "precips": set()})
+        if not data or "data" not in data:
+            continue
 
-            for obs in data["data"]:
-                sid = obs.get("sourceId", "").split(":")[0]
-                ref_time = obs.get("referenceTime", "")
-                for o in obs.get("observations", []):
-                    eid = o.get("elementId", "")
-                    val = o.get("value")
-                    if val is None:
-                        continue
-                    val = float(val)
-                    if "wind_speed" == eid:
-                        hourly[sid]["winds"].append(val)
-                    elif "gust" in eid:
-                        hourly[sid]["gusts"].append(val)
-                    elif "temperature" in eid:
-                        hourly[sid]["temps"].append(val)
-                    elif "precipitation" in eid:
-                        # Deduplicate by reference time
-                        key = f"{ref_time}_{val}"
-                        if key not in hourly[sid]["precips"]:
-                            hourly[sid]["precips"].add(key)
+        hourly = defaultdict(lambda: {
+            "winds": [],
+            "gusts": [],
+            "temps": [],
+            "precips": {}
+        })
 
-            for sid, h in hourly.items():
-                if sid not in existing_obs:
-                    existing_obs[sid] = {}
-                if h["winds"] and "mean(wind_speed P1D)" not in existing_obs[sid]:
-                    existing_obs[sid]["wind_mean"] = sum(h["winds"]) / len(h["winds"])
-                if h["gusts"] and "max(wind_speed_of_gust P1D)" not in existing_obs[sid]:
-                    existing_obs[sid]["gust_max"] = max(h["gusts"])
-                if h["temps"] and "mean(air_temperature P1D)" not in existing_obs[sid]:
-                    existing_obs[sid]["temp_mean"] = sum(h["temps"]) / len(h["temps"])
-                # For hourly precip, sum unique values
-                if h["precips"] and "sum(precipitation_amount P1D)" not in existing_obs[sid]:
-                    precip_vals = [float(p.split("_")[1]) for p in h["precips"]]
-                    existing_obs[sid]["precip"] = sum(max(0, v) for v in precip_vals)
+        for obs in data["data"]:
+            sid = obs.get("sourceId", "").split(":")[0]
+            ref_time = obs.get("referenceTime", "")
+
+            for o in obs.get("observations", []):
+                eid = o.get("elementId", "")
+                val = o.get("value")
+
+                if val is None:
+                    continue
+
+                val = float(val)
+
+                if eid == "wind_speed":
+                    hourly[sid]["winds"].append(val)
+                elif eid == "max(wind_speed_of_gust PT1H)" or "gust" in eid:
+                    hourly[sid]["gusts"].append(val)
+                elif eid == "air_temperature" or "temperature" in eid:
+                    hourly[sid]["temps"].append(val)
+                elif eid == "sum(precipitation_amount PT1H)" or "precipitation" in eid:
+                    hourly[sid]["precips"][ref_time] = val
+
+        for sid, h in hourly.items():
+            if sid not in existing_obs:
+                existing_obs[sid] = {}
+
+            if h["winds"] and "mean(wind_speed P1D)" not in existing_obs[sid]:
+                existing_obs[sid]["wind_mean"] = sum(h["winds"]) / len(h["winds"])
+
+            if h["gusts"] and "max(wind_speed_of_gust PT1H)" not in existing_obs[sid]:
+                existing_obs[sid]["gust_max"] = max(h["gusts"])
+
+            if h["temps"] and "mean(air_temperature P1D)" not in existing_obs[sid]:
+                existing_obs[sid]["temp_mean"] = sum(h["temps"]) / len(h["temps"])
+
+            if h["precips"] and "sum(precipitation_amount P1D)" not in existing_obs[sid]:
+                precip_vals = list(h["precips"].values())
+                existing_obs[sid]["precip"] = sum(max(0, v) for v in precip_vals)
 
     return existing_obs
 
@@ -350,6 +366,7 @@ def compute_county_ei(obs_data, stations):
     for sid, data in obs_data.items():
         if sid not in stations:
             continue
+
         fylke = stations[sid]["fylke"]
         ei = calculate_ei(
             data["wind_mean"],
@@ -374,15 +391,18 @@ def compute_county_ei(obs_data, stations):
 def find_top_stations(obs_data, stations, n=5):
     """Find top N stations by EI score."""
     station_scores = []
+
     for sid, data in obs_data.items():
         if sid not in stations:
             continue
+
         ei = calculate_ei(
             data["wind_mean"],
             data["gust_max"],
             data["precip"],
             data["temp_mean"]
         )
+
         station_scores.append({
             "navn": stations[sid]["name"],
             "kommune": stations[sid]["municipality"],
@@ -403,8 +423,7 @@ def find_top_stations(obs_data, stations, n=5):
 def read_current_data():
     """Parse the current weatherData.ts to extract existing data."""
     with open(WEATHER_DATA_PATH, "r", encoding="utf-8") as f:
-        content = f.read()
-    return content
+        return f.read()
 
 
 def generate_trend(fylke, prev_score, new_score):
@@ -412,14 +431,13 @@ def generate_trend(fylke, prev_score, new_score):
     diff = new_score - prev_score
     if diff > 5:
         return f"Kraftig forverring (+{diff:.1f}) — økt vind og/eller nedbør"
-    elif diff > 2:
+    if diff > 2:
         return f"Noe forverring (+{diff:.1f}) — ustabilt vær fortsetter"
-    elif diff > -2:
-        return f"Stabilt — lite endring fra i går"
-    elif diff > -5:
+    if diff > -2:
+        return "Stabilt — lite endring fra i går"
+    if diff > -5:
         return f"Noe bedring ({diff:.1f}) — roligere forhold"
-    else:
-        return f"Markant bedring ({diff:.1f}) — lavtrykket har passert"
+    return f"Markant bedring ({diff:.1f}) — lavtrykket har passert"
 
 
 def update_weather_data(target_date, county_ei, top_stations, existing_content):
@@ -429,79 +447,59 @@ def update_weather_data(target_date, county_ei, top_stations, existing_content):
     """
     log.info("Updating weatherData.ts...")
 
-    # Parse existing FYLKER_DAG_FOR_DAG to get current daily arrays
     existing_daily = {}
     pattern = r'\{\s*navn:\s*"([^"]+)",\s*dager:\s*\[([^\]]+)\],\s*trend:\s*"([^"]*)"'
     for match in re.finditer(pattern, existing_content):
         name = match.group(1)
-        dager = [float(x.strip()) for x in match.group(2).split(",")]
+        dager = [float(x.strip()) for x in match.group(2).split(",") if x.strip()]
         existing_daily[name] = dager
 
-    # Parse existing META dagLabels
     dag_labels_match = re.search(r'dagLabels:\s*\[([^\]]+)\]', existing_content)
     existing_labels = []
     if dag_labels_match:
-        existing_labels = [x.strip().strip('"') for x in dag_labels_match.group(1).split(",")]
+        existing_labels = [x.strip().strip('"') for x in dag_labels_match.group(1).split(",") if x.strip()]
 
-    # Determine new day label
-    day_of_week = target_date.weekday()  # 0=Mon
+    day_of_week = target_date.weekday()
     day_num = target_date.strftime("%d")
     new_label = f"{DAY_LABELS_NO[day_of_week]} {day_num}"
 
-    # Build new daily arrays
     new_daily = {}
     for fylke in ALL_FYLKER:
         prev_dager = existing_daily.get(fylke, [])
         new_score = county_ei.get(fylke, 0.0)
         new_daily[fylke] = prev_dager + [new_score]
 
-    # Calculate totals
     totals = {f: round(sum(d), 1) for f, d in new_daily.items()}
     sorted_total = sorted(totals.items(), key=lambda x: x[1], reverse=True)
 
-    # Calculate previous ranking (before today)
     prev_totals = {f: round(sum(d[:-1]), 1) for f, d in new_daily.items()}
     prev_sorted = sorted(prev_totals.items(), key=lambda x: x[1], reverse=True)
     prev_rank = {f: i for i, (f, _) in enumerate(prev_sorted)}
     new_rank = {f: i for i, (f, _) in enumerate(sorted_total)}
     rank_change = {f: prev_rank.get(f, 0) - new_rank.get(f, 0) for f in ALL_FYLKER}
 
-    # Determine today's leader
     today_sorted = sorted(county_ei.items(), key=lambda x: x[1], reverse=True)
     today_leader = today_sorted[0] if today_sorted else ("Ukjent", 0)
 
-    # Previous day scores for trend
     prev_day_scores = {}
     for fylke in ALL_FYLKER:
         d = new_daily[fylke]
-        if len(d) >= 2:
-            prev_day_scores[fylke] = d[-2]
-        else:
-            prev_day_scores[fylke] = 0
+        prev_day_scores[fylke] = d[-2] if len(d) >= 2 else 0
 
-    # Generate trends
     trends = {}
     for fylke in ALL_FYLKER:
         trends[fylke] = generate_trend(fylke, prev_day_scores.get(fylke, 0), county_ei.get(fylke, 0))
 
-    # Build new labels
     new_labels = existing_labels + [new_label]
-
-    # Determine tronskifte
     overall_leader = sorted_total[0][0]
     prev_leader = prev_sorted[0][0] if prev_sorted else overall_leader
     tronskifte_aktiv = overall_leader != prev_leader
 
-    # Build date strings
     date_str_no = target_date.strftime("%d.%m.%Y")
     day_name_no = ["Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag", "Lørdag", "Søndag"][day_of_week]
     now_str = datetime.now(timezone.utc).strftime("%d.%m.%Y kl. %H:%M")
-
-    # Parse first date from existing labels for period
-    first_date_label = new_labels[0] if new_labels else "Man 02"
     num_days = len(new_labels)
 
-    # Generate the new weatherData.ts
     lines = []
     lines.append('/**')
     lines.append(' * ============================================================')
@@ -509,7 +507,7 @@ def update_weather_data(target_date, county_ei, top_stations, existing_content):
     lines.append(' * ============================================================')
     lines.append(' * FREMTIDSSIKRING: For å oppdatere dashboardet med nye data,')
     lines.append(' * erstatt kun denne filen. Designet endres ikke.')
-    lines.append(f' *')
+    lines.append(' *')
     lines.append(f' * Sist oppdatert: {now_str}')
     lines.append(f' * Periode sammenlagt: {num_days} dager')
     lines.append(' * Kilde: Frost API (frost.met.no), P1D + timesdata')
@@ -532,7 +530,6 @@ def update_weather_data(target_date, county_ei, top_stations, existing_content):
     lines.append('')
     lines.append('export const FYLKER_DAG_FOR_DAG = [')
 
-    # Sort by total for display
     for fylke, total in sorted_total:
         dager = new_daily[fylke]
         dager_str = ", ".join(f"{d}" for d in dager)
@@ -549,7 +546,10 @@ def update_weather_data(target_date, county_ei, top_stations, existing_content):
         i_dag = county_ei.get(fylke, 0)
         endring = round(i_dag - prev_day_scores.get(fylke, 0), 1)
         plassering = rank_change.get(fylke, 0)
-        lines.append(f'  {{ navn: "{fylke}", total: {total}, iDag: {i_dag}, endringFraIGar: {endring}, plasseringEndring: {plassering} }},')
+        lines.append(
+            f'  {{ navn: "{fylke}", total: {total}, iDag: {i_dag}, '
+            f'endringFraIGar: {endring}, plasseringEndring: {plassering} }},'
+        )
 
     lines.append('];')
     lines.append('')
@@ -558,12 +558,15 @@ def update_weather_data(target_date, county_ei, top_stations, existing_content):
     lines.append('export const STASJONER_PERIODE = [')
 
     for s in top_stations:
-        lines.append(f'  {{ navn: "{s["navn"]}", kommune: "{s["kommune"]}", fylke: "{s["fylke"]}", ei: {s["ei"]}, vindkast: {s["vindkast"]}, nedbor: {s["nedbor"]}, temp: {s["temp"]}, farevarsel: "{s["farevarsel"]}" }},')
+        lines.append(
+            f'  {{ navn: "{s["navn"]}", kommune: "{s["kommune"]}", fylke: "{s["fylke"]}", '
+            f'ei: {s["ei"]}, vindkast: {s["vindkast"]}, nedbor: {s["nedbor"]}, '
+            f'temp: {s["temp"]}, farevarsel: "{s["farevarsel"]}" }},'
+        )
 
     lines.append('];')
     lines.append('')
 
-    # Keep existing STASJONER_UKE (weekly stations) — extract from existing content
     uke_match = re.search(r'(// ---- UKENS TOPP 5.*?^];)', existing_content, re.MULTILINE | re.DOTALL)
     if uke_match:
         lines.append(uke_match.group(1))
@@ -576,14 +579,22 @@ def update_weather_data(target_date, county_ei, top_stations, existing_content):
     lines.append('export const TRONSKIFTE = {')
     lines.append(f'  aktiv: {str(tronskifte_aktiv).lower()},')
 
-    if tronskifte_aktiv:
+    if tronskifte_aktiv and len(sorted_total) > 1:
         lines.append(f'  tittel: "TRONSKIFTE! {overall_leader.upper()} TAR LEDELSEN!",')
-        lines.append(f'  beskrivelse: "{overall_leader} har overtatt førsteplassen i sammenlagt-ligaen med {sorted_total[0][1]} poeng, foran {sorted_total[1][0]} ({sorted_total[1][1]}).",')
+        lines.append(
+            f'  beskrivelse: "{overall_leader} har overtatt førsteplassen i sammenlagt-ligaen med '
+            f'{sorted_total[0][1]} poeng, foran {sorted_total[1][0]} ({sorted_total[1][1]}).",'
+        )
         lines.append(f'  gammelLeder: "{prev_leader}",')
     else:
-        lines.append(f'  tittel: "{overall_leader.upper()} LEDER KLART!",')
         margin = round(sorted_total[0][1] - sorted_total[1][1], 1) if len(sorted_total) > 1 else 0
-        lines.append(f'  beskrivelse: "{overall_leader} leder sammenlagt med {sorted_total[0][1]} poeng — {margin} poeng foran {sorted_total[1][0] if len(sorted_total) > 1 else "ukjent"} ({sorted_total[1][1] if len(sorted_total) > 1 else 0}).",')
+        runner_up_name = sorted_total[1][0] if len(sorted_total) > 1 else "ukjent"
+        runner_up_score = sorted_total[1][1] if len(sorted_total) > 1 else 0
+        lines.append(f'  tittel: "{overall_leader.upper()} LEDER KLART!",')
+        lines.append(
+            f'  beskrivelse: "{overall_leader} leder sammenlagt med {sorted_total[0][1]} poeng — '
+            f'{margin} poeng foran {runner_up_name} ({runner_up_score}).",'
+        )
         lines.append(f'  gammelLeder: "{overall_leader}",')
 
     lines.append(f'  nyLeder: "{overall_leader}",')
@@ -594,8 +605,8 @@ def update_weather_data(target_date, county_ei, top_stations, existing_content):
     lines.append('export const DAGENS_LEDER = {')
     lines.append(f'  fylke: "{today_leader[0]}",')
     lines.append(f'  ei: {today_leader[1]},')
-    lines.append(f'  temp: 0,')
-    lines.append(f'  nedbor: 0,')
+    lines.append('  temp: 0,')
+    lines.append('  nedbor: 0,')
     lines.append('};')
     lines.append('')
     lines.append('// ---- HJELPEFUNKSJONER ----')
@@ -669,36 +680,30 @@ def main():
         log.error("Set it with: export FROST_CLIENT_ID=your_client_id")
         sys.exit(1)
 
-    # Target date: yesterday (P1D data is typically available after midnight)
     target_date = datetime.now(timezone.utc).date() - timedelta(days=1)
     date_str = target_date.strftime("%Y-%m-%d")
 
-    log.info(f"=== Norges Verste Vær — Daglig oppdatering ===")
+    log.info("=== Norges Verste Vær — Daglig oppdatering ===")
     log.info(f"Henter data for: {date_str}")
 
-    # Step 1: Get station metadata
     stations = get_station_metadata()
     if not stations:
         log.error("No station metadata — aborting")
         sys.exit(1)
 
-    # Step 2: Fetch observations
     obs_data = fetch_daily_observations(date_str, stations)
     if not obs_data:
         log.error("No observation data — aborting")
         sys.exit(1)
 
-    # Step 3: Calculate county EI
     county_ei = compute_county_ei(obs_data, stations)
     log.info(f"County EI: {json.dumps(county_ei, indent=2, ensure_ascii=False)}")
 
-    # Step 4: Find top stations
     top_stations = find_top_stations(obs_data, stations, n=5)
-    log.info(f"Top 5 stations:")
+    log.info("Top 5 stations:")
     for i, s in enumerate(top_stations):
-        log.info(f"  {i+1}. {s['navn']} ({s['fylke']}): EI {s['ei']}")
+        log.info(f"  {i + 1}. {s['navn']} ({s['fylke']}): EI {s['ei']}")
 
-    # Step 5: Read existing data and update
     existing_content = read_current_data()
     success = update_weather_data(target_date, county_ei, top_stations, existing_content)
 
