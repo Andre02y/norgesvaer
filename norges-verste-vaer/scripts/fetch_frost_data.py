@@ -204,31 +204,31 @@ def fetch_daily_observations(date_str, stations):
     station_ids = list(stations.keys())
     all_obs = {}
 
-    # Batch stations (max 50 per request to avoid URI too long)
-    batch_size = 50
-    for i in range(0, len(station_ids), batch_size):
-        batch = station_ids[i:i + batch_size]
-        sources_str = ",".join(batch)
+  # Batch stations (max 50 per request to avoid URI too long)
+batch_size = 50
+for i in range(0, len(station_ids), batch_size):
+    batch = station_ids[i:i + batch_size]
+    sources_str = ",".join(batch)
 
-      data = frost_get(FROST_BASE_URL, {
-    "sources": sources_str,
-    "referencetime": f"{date_str}/{date_str}",
-    "elements": "sum(precipitation_amount P1D),mean(wind_speed P1D),max(wind_speed_of_gust PT1H),mean(air_temperature P1D)",
-    "timeoffsets": "PT0H",
-    "fields": "sourceId,elementId,value,referenceTime"
-})
+    data = frost_get(FROST_BASE_URL, {
+        "sources": sources_str,
+        "referencetime": f"{date_str}/{date_str}",
+        "elements": "sum(precipitation_amount P1D),mean(wind_speed P1D),max(wind_speed_of_gust PT1H),mean(air_temperature P1D)",
+        "timeoffsets": "PT0H",
+        "fields": "sourceId,elementId,value,referenceTime"
+    })
 
-        if data and "data" in data:
-            for obs in data["data"]:
-                sid = obs.get("sourceId", "").split(":")[0]
-                ref_time = obs.get("referenceTime", "")[:10]
-                if ref_time != date_str:
+    if data and "data" in data:
+        for obs in data["data"]:
+            sid = obs.get("sourceId", "").split(":")[0]
+            ref_time = obs.get("referenceTime", "")[:10]
+            if ref_time != date_str:
+                continue
+            for o in obs.get("observations", []):
+                eid = o.get("elementId", "")
+                val = o.get("value")
+                if val is None:
                     continue
-                for o in obs.get("observations", []):
-                    eid = o.get("elementId", "")
-                    val = o.get("value")
-                    if val is None:
-                        continue
                     if sid not in all_obs:
                         all_obs[sid] = {}
                     # Deduplicate: keep first value per element per station
