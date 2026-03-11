@@ -5,8 +5,8 @@
  * FREMTIDSSIKRING: For å oppdatere dashboardet med nye data,
  * erstatt kun denne filen. Designet endres ikke.
  *
- * Sist oppdatert: 11.03.2026 kl. 05:14
- * Periode sammenlagt: 17 dager
+ * Sist oppdatert: 11.03.2026 kl. 07:03
+ * Periode sammenlagt: 18 dager
  * Kilde: Frost API (frost.met.no), P1D + timesdata
  * ============================================================
  */
@@ -16,48 +16,48 @@
 export const META = {
   serieNavn: "Norges Verste Vær",
   dagLabel: "Tirsdag 10.03.2026",
-  sammenlagtLabel: "17 dager",
-  datoOppdatert: "11.03.2026 kl. 05:14",
-  rapportVersjon: "v23 (Frost API P1D + timesdata)",
-  dagLabels: ["Man 02", "Tir 03", "Ons 04", "Tor 05", "Fre 06", "Lør 07", "Søn 08", "Lør 07", "Lør 07", "Lør 07", "Lør 07", "Man 09", "Man 09", "Man 09", "Man 09", "Tir 10", "Tir 10"],
+  sammenlagtLabel: "18 dager",
+  datoOppdatert: "11.03.2026 kl. 07:03",
+  rapportVersjon: "v24 (Frost API P1D + timesdata)",
+  dagLabels: ["Man 02", "Tir 03", "Ons 04", "Tor 05", "Fre 06", "Lør 07", "Søn 08", "Lør 07", "Lør 07", "Lør 07", "Lør 07", "Man 09", "Man 09", "Man 09", "Man 09", "Tir 10", "Tir 10", "Tir 10"],
 };
 
 // ---- DAG-FOR-DAG EI PER FYLKE ----
 
 export const FYLKER_DAG_FOR_DAG = [
-  { navn: "Finnmark", dager: [33.0, 41.0, 36.0, 27.1, 37.2, 38.0, 32.6, 33.9, 33.9, 33.9, 33.9, 31.0, 31.0, 31.0, 31.0, 30.2, 30.2], trend: "Stabilt — lite endring fra i går" },
-  { navn: "Nordland", dager: [28.5, 42.0, 45.0, 23.2, 34.8, 32.8, 28.8, 23.5, 23.5, 23.5, 23.5, 24.3, 24.3, 24.3, 24.3, 24.6, 24.6], trend: "Stabilt — lite endring fra i går" },
-  { navn: "Troms", dager: [30.0, 35.0, 37.0, 25.3, 30.0, 29.0, 26.0, 25.0, 25.0, 25.0, 25.0, 25.6, 25.6, 25.6, 25.6, 26.4, 26.4], trend: "Stabilt — lite endring fra i går" },
-  { navn: "Innlandet", dager: [26.0, 34.0, 36.0, 19.1, 25.2, 27.8, 24.6, 20.8, 20.8, 20.8, 20.8, 22.1, 22.1, 22.1, 22.1, 22.8, 22.8], trend: "Stabilt — lite endring fra i går" },
-  { navn: "Trøndelag", dager: [27.0, 36.0, 37.0, 18.9, 23.0, 26.4, 25.8, 21.1, 21.1, 21.1, 21.1, 21.5, 21.5, 21.5, 21.5, 19.7, 19.7], trend: "Stabilt — lite endring fra i går" },
-  { navn: "Vestland", dager: [32.0, 45.0, 42.0, 18.2, 20.1, 21.4, 22.1, 18.4, 18.4, 18.4, 18.4, 20.8, 20.8, 20.8, 20.8, 20.9, 20.9], trend: "Stabilt — lite endring fra i går" },
-  { navn: "Møre og Romsdal", dager: [29.0, 40.0, 39.0, 16.7, 21.9, 23.8, 23.7, 18.0, 18.0, 18.0, 18.0, 18.0, 18.0, 18.0, 18.0, 17.8, 17.8], trend: "Stabilt — lite endring fra i går" },
-  { navn: "Buskerud", dager: [20.0, 26.0, 28.0, 17.1, 22.4, 25.2, 22.5, 19.2, 19.2, 19.2, 19.2, 21.0, 21.0, 21.0, 20.9, 21.1, 21.0], trend: "Stabilt — lite endring fra i går" },
-  { navn: "Rogaland", dager: [28.0, 38.0, 41.0, 17.3, 18.8, 18.1, 17.0, 16.0, 16.0, 15.9, 15.9, 19.8, 19.8, 19.8, 19.8, 21.2, 21.2], trend: "Stabilt — lite endring fra i går" },
-  { navn: "Agder", dager: [22.0, 28.0, 28.0, 17.4, 22.4, 21.3, 21.5, 18.3, 18.3, 18.3, 18.3, 20.6, 20.6, 20.6, 20.6, 21.3, 21.3], trend: "Stabilt — lite endring fra i går" },
-  { navn: "Telemark", dager: [21.0, 27.0, 29.0, 16.7, 21.4, 25.8, 19.5, 18.3, 18.3, 18.3, 18.3, 20.9, 20.9, 20.9, 20.9, 20.8, 20.8], trend: "Stabilt — lite endring fra i går" },
-  { navn: "Akershus", dager: [19.0, 24.0, 27.0, 16.3, 21.2, 22.0, 18.9, 18.2, 18.2, 18.2, 18.2, 20.2, 20.2, 20.2, 20.2, 20.6, 20.6], trend: "Stabilt — lite endring fra i går" },
-  { navn: "Østfold", dager: [18.0, 23.0, 25.0, 15.9, 21.8, 22.0, 19.4, 17.9, 17.9, 17.9, 17.9, 20.8, 20.8, 20.8, 20.8, 21.4, 21.4], trend: "Stabilt — lite endring fra i går" },
-  { navn: "Oslo", dager: [16.0, 20.0, 23.0, 13.1, 21.6, 29.5, 19.8, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], trend: "Stabilt — lite endring fra i går" },
-  { navn: "Vestfold", dager: [17.0, 21.0, 22.0, 16.2, 18.0, 20.0, 17.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], trend: "Stabilt — lite endring fra i går" },
+  { navn: "Finnmark", dager: [33.0, 41.0, 36.0, 27.1, 37.2, 38.0, 32.6, 33.9, 33.9, 33.9, 33.9, 31.0, 31.0, 31.0, 31.0, 30.2, 30.2, 30.2], trend: "Stabilt — lite endring fra i går" },
+  { navn: "Nordland", dager: [28.5, 42.0, 45.0, 23.2, 34.8, 32.8, 28.8, 23.5, 23.5, 23.5, 23.5, 24.3, 24.3, 24.3, 24.3, 24.6, 24.6, 24.6], trend: "Stabilt — lite endring fra i går" },
+  { navn: "Troms", dager: [30.0, 35.0, 37.0, 25.3, 30.0, 29.0, 26.0, 25.0, 25.0, 25.0, 25.0, 25.6, 25.6, 25.6, 25.6, 26.4, 26.4, 26.4], trend: "Stabilt — lite endring fra i går" },
+  { navn: "Innlandet", dager: [26.0, 34.0, 36.0, 19.1, 25.2, 27.8, 24.6, 20.8, 20.8, 20.8, 20.8, 22.1, 22.1, 22.1, 22.1, 22.8, 22.8, 22.8], trend: "Stabilt — lite endring fra i går" },
+  { navn: "Trøndelag", dager: [27.0, 36.0, 37.0, 18.9, 23.0, 26.4, 25.8, 21.1, 21.1, 21.1, 21.1, 21.5, 21.5, 21.5, 21.5, 19.7, 19.7, 19.7], trend: "Stabilt — lite endring fra i går" },
+  { navn: "Vestland", dager: [32.0, 45.0, 42.0, 18.2, 20.1, 21.4, 22.1, 18.4, 18.4, 18.4, 18.4, 20.8, 20.8, 20.8, 20.8, 20.9, 20.9, 20.9], trend: "Stabilt — lite endring fra i går" },
+  { navn: "Møre og Romsdal", dager: [29.0, 40.0, 39.0, 16.7, 21.9, 23.8, 23.7, 18.0, 18.0, 18.0, 18.0, 18.0, 18.0, 18.0, 18.0, 17.8, 17.8, 17.8], trend: "Stabilt — lite endring fra i går" },
+  { navn: "Buskerud", dager: [20.0, 26.0, 28.0, 17.1, 22.4, 25.2, 22.5, 19.2, 19.2, 19.2, 19.2, 21.0, 21.0, 21.0, 20.9, 21.1, 21.0, 21.1], trend: "Stabilt — lite endring fra i går" },
+  { navn: "Rogaland", dager: [28.0, 38.0, 41.0, 17.3, 18.8, 18.1, 17.0, 16.0, 16.0, 15.9, 15.9, 19.8, 19.8, 19.8, 19.8, 21.2, 21.2, 21.2], trend: "Stabilt — lite endring fra i går" },
+  { navn: "Agder", dager: [22.0, 28.0, 28.0, 17.4, 22.4, 21.3, 21.5, 18.3, 18.3, 18.3, 18.3, 20.6, 20.6, 20.6, 20.6, 21.3, 21.3, 21.3], trend: "Stabilt — lite endring fra i går" },
+  { navn: "Telemark", dager: [21.0, 27.0, 29.0, 16.7, 21.4, 25.8, 19.5, 18.3, 18.3, 18.3, 18.3, 20.9, 20.9, 20.9, 20.9, 20.8, 20.8, 20.8], trend: "Stabilt — lite endring fra i går" },
+  { navn: "Østfold", dager: [18.0, 23.0, 25.0, 15.9, 21.8, 22.0, 19.4, 17.9, 17.9, 17.9, 17.9, 20.8, 20.8, 20.8, 20.8, 21.4, 21.4, 21.4], trend: "Stabilt — lite endring fra i går" },
+  { navn: "Akershus", dager: [19.0, 24.0, 27.0, 16.3, 21.2, 22.0, 18.9, 18.2, 18.2, 18.2, 18.2, 20.2, 20.2, 20.2, 20.2, 20.6, 20.6, 20.6], trend: "Stabilt — lite endring fra i går" },
+  { navn: "Oslo", dager: [16.0, 20.0, 23.0, 13.1, 21.6, 29.5, 19.8, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], trend: "Stabilt — lite endring fra i går" },
+  { navn: "Vestfold", dager: [17.0, 21.0, 22.0, 16.2, 18.0, 20.0, 17.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], trend: "Stabilt — lite endring fra i går" },
 ];
 
 // ---- SAMMENLAGT ----
 
 export const FYLKER_SAMMENLAGT = [
-  { navn: "Finnmark", total: 564.9, iDag: 30.2, endringFraIGar: 0.0, plasseringEndring: 0 },
-  { navn: "Nordland", total: 475.5, iDag: 24.6, endringFraIGar: 0.0, plasseringEndring: 0 },
-  { navn: "Troms", total: 467.5, iDag: 26.4, endringFraIGar: 0.0, plasseringEndring: 0 },
-  { navn: "Innlandet", total: 409.9, iDag: 22.8, endringFraIGar: 0.0, plasseringEndring: 0 },
-  { navn: "Trøndelag", total: 403.9, iDag: 19.7, endringFraIGar: 0.0, plasseringEndring: 0 },
-  { navn: "Vestland", total: 399.4, iDag: 20.9, endringFraIGar: 0.0, plasseringEndring: 0 },
-  { navn: "Møre og Romsdal", total: 373.7, iDag: 17.8, endringFraIGar: 0.0, plasseringEndring: 0 },
-  { navn: "Buskerud", total: 364.0, iDag: 21.0, endringFraIGar: -0.1, plasseringEndring: 0 },
-  { navn: "Rogaland", total: 363.6, iDag: 21.2, endringFraIGar: 0.0, plasseringEndring: 0 },
-  { navn: "Agder", total: 358.8, iDag: 21.3, endringFraIGar: 0.0, plasseringEndring: 1 },
-  { navn: "Telemark", total: 358.8, iDag: 20.8, endringFraIGar: 0.0, plasseringEndring: -1 },
-  { navn: "Akershus", total: 343.2, iDag: 20.6, endringFraIGar: 0.0, plasseringEndring: 0 },
-  { navn: "Østfold", total: 342.7, iDag: 21.4, endringFraIGar: 0.0, plasseringEndring: 0 },
+  { navn: "Finnmark", total: 595.1, iDag: 30.2, endringFraIGar: 0.0, plasseringEndring: 0 },
+  { navn: "Nordland", total: 500.1, iDag: 24.6, endringFraIGar: 0.0, plasseringEndring: 0 },
+  { navn: "Troms", total: 493.9, iDag: 26.4, endringFraIGar: 0.0, plasseringEndring: 0 },
+  { navn: "Innlandet", total: 432.7, iDag: 22.8, endringFraIGar: 0.0, plasseringEndring: 0 },
+  { navn: "Trøndelag", total: 423.6, iDag: 19.7, endringFraIGar: 0.0, plasseringEndring: 0 },
+  { navn: "Vestland", total: 420.3, iDag: 20.9, endringFraIGar: 0.0, plasseringEndring: 0 },
+  { navn: "Møre og Romsdal", total: 391.5, iDag: 17.8, endringFraIGar: 0.0, plasseringEndring: 0 },
+  { navn: "Buskerud", total: 385.1, iDag: 21.1, endringFraIGar: 0.1, plasseringEndring: 0 },
+  { navn: "Rogaland", total: 384.8, iDag: 21.2, endringFraIGar: 0.0, plasseringEndring: 0 },
+  { navn: "Agder", total: 380.1, iDag: 21.3, endringFraIGar: 0.0, plasseringEndring: 0 },
+  { navn: "Telemark", total: 379.6, iDag: 20.8, endringFraIGar: 0.0, plasseringEndring: 0 },
+  { navn: "Østfold", total: 364.1, iDag: 21.4, endringFraIGar: 0.0, plasseringEndring: 1 },
+  { navn: "Akershus", total: 363.8, iDag: 20.6, endringFraIGar: 0.0, plasseringEndring: -1 },
   { navn: "Oslo", total: 143.0, iDag: 0.0, endringFraIGar: 0.0, plasseringEndring: 0 },
   { navn: "Vestfold", total: 131.2, iDag: 0.0, endringFraIGar: 0.0, plasseringEndring: 0 },
 ];
@@ -139,7 +139,7 @@ export const STASJONER_UKE = [
 export const TRONSKIFTE = {
   aktiv: false,
   tittel: "FINNMARK LEDER KLART!",
-  beskrivelse: "Finnmark leder sammenlagt med 564.9 poeng — 89.4 poeng foran Nordland (475.5).",
+  beskrivelse: "Finnmark leder sammenlagt med 595.1 poeng — 95.0 poeng foran Nordland (500.1).",
   gammelLeder: "Finnmark",
   nyLeder: "Finnmark",
 };
